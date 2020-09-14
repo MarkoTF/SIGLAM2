@@ -5,6 +5,9 @@ var path = require('path');
 var logger = require('morgan');
 var debug = require('debug')('siglam:db');
 
+var usuarios = require('./routes/users');
+var catalogo = require('./routes/catalogo');
+
 var app = express();
 
 //Conexión a la base de datos
@@ -21,6 +24,11 @@ db.once('open', function() {
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+//Rutas
+app.use('/catalogo', catalogo);
+app.use('/usuarios', usuarios);
 
 // Captura al error 404 y lo envía al manejador de errores
 app.use(function(req, res, next) {

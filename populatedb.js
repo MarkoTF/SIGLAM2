@@ -3,215 +3,229 @@
 console.log('This script populates some test books, authors, genres and bookinstances to your database. Specified database as argument - e.g.: populatedb mongodb+srv://cooluser:coolpassword@cluster0-mbdj7.mongodb.net/local_library?retryWrites=true');
 
 // Get arguments passed on command line
-var userArgs = process.argv.slice(2);
+//var userArgs = process.argv.slice(2);
 /*
 if (!userArgs[0].startsWith('mongodb')) {
     console.log('ERROR: You need to specify a valid mongodb URL as the first argument');
     return
 }
 */
-var async = require('async')
-var Book = require('./models/book')
-var Author = require('./models/author')
-var Genre = require('./models/genre')
-var BookInstance = require('./models/bookinstance')
+var async = require('async');
+var Teacher = require('./models/teacher');
+var Category = require('./models/category');
+var Lend = require('./models/lend');
+var Student = require('./models/student');
+var Tool = require('./models/tool');
+var Worker = require('./models/worker');
 
 
+//Conexión a la base de datos
 var mongoose = require('mongoose');
-var mongoDB = userArgs[0];
-mongoose.connect(mongoDB, { useNewUrlParser: true });
+var mongoDb = 'mongodb://localhost:27017/siglam';
+mongoose.connect(mongoDb, {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.on('error', console.error.bind(console, 'Error en la Conexión a la base de datos:'));
+db.once('open', function() {
+  console.log('Conexión exitosa a la base de datos');
+});
 
-var authors = []
-var genres = []
-var books = []
-var bookinstances = []
+var teachers = [];
+var categories = [];
+var lends = [];
+var students = [];
+var tools = [];
+var workers = [];
 
-function authorCreate(first_name, family_name, d_birth, d_death, cb) {
-  authordetail = {first_name:first_name , family_name: family_name }
-  if (d_birth != false) authordetail.date_of_birth = d_birth
-  if (d_death != false) authordetail.date_of_death = d_death
+function teacherCreate(nombre, apellido, identificacion, carrera, horario, correo, contrasenia, cb) {
+  teacherdetail = {nombre:nombre,
+                  apellido: apellido,
+                  identificacion: identificacion,
+                  carrera: carrera,
+                  horario: horario,
+                  correo: correo,
+                  contrasenia: contrasenia
+                };
   
-  var author = new Author(authordetail);
+  var teacher = new Teacher(teacherdetail);
        
-  author.save(function (err) {
+  teacher.save(function (err) {
     if (err) {
       cb(err, null)
       return
     }
-    console.log('New Author: ' + author);
-    authors.push(author)
-    cb(null, author)
+    console.log('Nuevo maestro: ' + teacher);
+    teachers.push(teacher)
+    cb(null, teacher)
   }  );
 }
 
-function genreCreate(name, cb) {
-  var genre = new Genre({ name: name });
+function categoryCreate(nombre, cb) {
+  var category = new Category({ nombre: nombre });
        
-  genre.save(function (err) {
+  category.save(function (err) {
     if (err) {
       cb(err, null);
       return;
     }
-    console.log('New Genre: ' + genre);
-    genres.push(genre)
-    cb(null, genre);
+    console.log('Nueva categoría: ' + category);
+    categories.push(category)
+    cb(null, category);
   }   );
 }
 
-function bookCreate(title, summary, isbn, author, genre, cb) {
-  bookdetail = { 
-    title: title,
-    summary: summary,
-    author: author,
-    isbn: isbn
-  }
-  if (genre != false) bookdetail.genre = genre
-    
-  var book = new Book(bookdetail);    
-  book.save(function (err) {
+
+function studentCreate(nombre, apellido, numeroControl, carrera, horario, correo, contrasenia, cb) {
+  studentdetail = {nombre:nombre,
+                  apellido: apellido,
+                  numeroControl: numeroControl,
+                  carrera: carrera,
+                  horario: horario,
+                  correo: correo,
+                  contrasenia: contrasenia
+                };
+  
+  var student = new Student(studentdetail);
+       
+  student.save(function (err) {
+    if (err) {
+      cb(err, null);
+      console.log('Error ' + err);
+      return;
+    }
+    console.log('Nuevo alumno: ' + student);
+    students.push(student);
+    cb(null, student);
+  }  );
+}
+
+function workerCreate(nombre, apellido, identificacion, horario, correo, contrasenia, cb) {
+  workerdetail = {nombre:nombre,
+                  apellido: apellido,
+                  identificacion: identificacion,
+                  horario: horario,
+                  correo: correo,
+                  contrasenia: contrasenia
+                };
+  
+  var worker = new Worker(workerdetail);
+       
+  worker.save(function (err) {
     if (err) {
       cb(err, null)
+      console.log('error ' + err);
       return
     }
-    console.log('New Book: ' + book);
-    books.push(book)
-    cb(null, book)
+    console.log('Nuevo trabajador: ' + worker);
+    workers.push(worker)
+    cb(null, worker)
   }  );
 }
 
 
-function bookInstanceCreate(book, imprint, due_back, status, cb) {
-  bookinstancedetail = { 
-    book: book,
-    imprint: imprint
-  }    
-  if (due_back != false) bookinstancedetail.due_back = due_back
-  if (status != false) bookinstancedetail.status = status
-    
-  var bookinstance = new BookInstance(bookinstancedetail);    
-  bookinstance.save(function (err) {
+function toolCreate(nombre, modelo, descripcion, categoria, cantidad, cb) {
+  tooldetail = {nombre:nombre,
+                  modelo: modelo,
+                  descripcion: descripcion,
+                  categoria: categoria,
+                  cantidad: cantidad,
+                };
+  
+  var tool = new Tool(tooldetail);
+       
+  tool.save(function (err) {
     if (err) {
-      console.log('ERROR CREATING BookInstance: ' + bookinstance);
       cb(err, null)
       return
     }
-    console.log('New BookInstance: ' + bookinstance);
-    bookinstances.push(bookinstance)
-    cb(null, book)
+    console.log('Nueva herramienta: ' + tool);
+    tools.push(tool)
+    cb(null, tool)
   }  );
 }
 
 
-function createGenreAuthors(cb) {
+function lendCreate(estudiante, maestro, trabajador, herramientas, fecha, cb) {
+  lendDetail = {estudiante: estudiante,
+                maestro: maestro,
+                trabajador:trabajador,
+                herramientas: herramientas,
+                fecha: fecha
+              };
+
+  var lend = new Lend(lendDetail);
+
+  lend.save(function(err) {
+    if(err) {
+      cb(err, null)
+      return
+    }
+    console.log('Nuevo prestamo' + lend);
+    lends.push(lend);
+    cb(null, lend);
+  });
+
+}
+
+
+function createCategotyStudentTeacherWorker(cb) {
     async.series([
-        function(callback) {
-          authorCreate('Patrick', 'Rothfuss', '1973-06-06', false, callback);
-        },
-        function(callback) {
-          authorCreate('Ben', 'Bova', '1932-11-8', false, callback);
-        },
-        function(callback) {
-          authorCreate('Isaac', 'Asimov', '1920-01-02', '1992-04-06', callback);
-        },
-        function(callback) {
-          authorCreate('Bob', 'Billings', false, false, callback);
-        },
-        function(callback) {
-          authorCreate('Jim', 'Jones', '1971-12-16', false, callback);
-        },
-        function(callback) {
-          genreCreate("Fantasy", callback);
-        },
-        function(callback) {
-          genreCreate("Science Fiction", callback);
-        },
-        function(callback) {
-          genreCreate("French Poetry", callback);
-        },
-        ],
-        // optional callback
-        cb);
+      function(callback) {
+        studentCreate('David', 'Dzul', 12123456, 'ISC', 'vespertino', 'correo@ejemplo.com', '12345678', callback);
+      },
+      function(callback) {
+        studentCreate('Alfonso', 'Tec', 12122556, 'ISC', 'matutino', 'correo@gmail.com', '12345678', callback);
+      },
+      function(callback) {
+        studentCreate('Mirna', 'Tec', 67340986, 'IER', 'matutino', 'ejemplo@gmail.com', '12345678', callback);
+      },
+      function(callback) {
+        workerCreate('Luis', 'Tec', 123456799, 'horario', 'Luis@gmail.com', 'contrasenia', callback);
+      },
+      function(callback) {
+        categoryCreate('A10', callback);
+      },
+      function(callback) {
+        categoryCreate('B90', callback);
+      },
+      function(callback) {
+        teacherCreate('Sarai', 'apellido', 231213213, 'ISC', 'horario', 'Saraí@gmail.com', '876543221', callback);
+      },
+
+    ], 
+    cb);
 }
 
 
-function createBooks(cb) {
-    async.parallel([
-        function(callback) {
-          bookCreate('The Name of the Wind (The Kingkiller Chronicle, #1)', 'I have stolen princesses back from sleeping barrow kings. I burned down the town of Trebon. I have spent the night with Felurian and left with both my sanity and my life. I was expelled from the University at a younger age than most people are allowed in. I tread paths by moonlight that others fear to speak of during day. I have talked to Gods, loved women, and written songs that make the minstrels weep.', '9781473211896', authors[0], [genres[0],], callback);
-        },
-        function(callback) {
-          bookCreate("The Wise Man's Fear (The Kingkiller Chronicle, #2)", 'Picking up the tale of Kvothe Kingkiller once again, we follow him into exile, into political intrigue, courtship, adventure, love and magic... and further along the path that has turned Kvothe, the mightiest magician of his age, a legend in his own time, into Kote, the unassuming pub landlord.', '9788401352836', authors[0], [genres[0],], callback);
-        },
-        function(callback) {
-          bookCreate("The Slow Regard of Silent Things (Kingkiller Chronicle)", 'Deep below the University, there is a dark place. Few people know of it: a broken web of ancient passageways and abandoned rooms. A young woman lives there, tucked among the sprawling tunnels of the Underthing, snug in the heart of this forgotten place.', '9780756411336', authors[0], [genres[0],], callback);
-        },
-        function(callback) {
-          bookCreate("Apes and Angels", "Humankind headed out to the stars not for conquest, nor exploration, nor even for curiosity. Humans went to the stars in a desperate crusade to save intelligent life wherever they found it. A wave of death is spreading through the Milky Way galaxy, an expanding sphere of lethal gamma ...", '9780765379528', authors[1], [genres[1],], callback);
-        },
-        function(callback) {
-          bookCreate("Death Wave","In Ben Bova's previous novel New Earth, Jordan Kell led the first human mission beyond the solar system. They discovered the ruins of an ancient alien civilization. But one alien AI survived, and it revealed to Jordan Kell that an explosion in the black hole at the heart of the Milky Way galaxy has created a wave of deadly radiation, expanding out from the core toward Earth. Unless the human race acts to save itself, all life on Earth will be wiped out...", '9780765379504', authors[1], [genres[1],], callback);
-        },
-        function(callback) {
-          bookCreate('Test Book 1', 'Summary of test book 1', 'ISBN111111', authors[4], [genres[0],genres[1]], callback);
-        },
-        function(callback) {
-          bookCreate('Test Book 2', 'Summary of test book 2', 'ISBN222222', authors[4], false, callback)
-        }
-        ],
-        // optional callback
-        cb);
+function createTool(cb) {
+    async.series([
+      function(callback) {
+        toolCreate('Pico', 'sasda', 'Pico para hacer hueco', categories[0], 3, callback);
+      },
+      function(callback) {
+        toolCreate('Cautín', '12sda', 'Cautín para soldar circuitos', categories[1], 1, callback);
+      }
+    ], cb);
 }
 
 
-function createBookInstances(cb) {
-    async.parallel([
-        function(callback) {
-          bookInstanceCreate(books[0], 'London Gollancz, 2014.', false, 'Available', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[1], ' Gollancz, 2011.', false, 'Loaned', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[2], ' Gollancz, 2015.', false, false, callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[3], 'New York Tom Doherty Associates, 2016.', false, 'Available', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[3], 'New York Tom Doherty Associates, 2016.', false, 'Available', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[3], 'New York Tom Doherty Associates, 2016.', false, 'Available', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[4], 'New York, NY Tom Doherty Associates, LLC, 2015.', false, 'Available', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[4], 'New York, NY Tom Doherty Associates, LLC, 2015.', false, 'Maintenance', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[4], 'New York, NY Tom Doherty Associates, LLC, 2015.', false, 'Loaned', callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[0], 'Imprint XXX2', false, false, callback)
-        },
-        function(callback) {
-          bookInstanceCreate(books[1], 'Imprint XXX3', false, false, callback)
-        }
-        ],
-        // Optional callback
-        cb);
+function createlend(cb) {
+  async.series([
+    function(callback) {
+      lendCreate(students[0], teachers[0], workers[0], tools[0], '27/10/2020', callback);
+    },
+    function(callback) {
+      lendCreate(students[1], teachers[0], workers[0], tools[1], '27/10/2020', callback);
+    }
+  ], cb);
 }
 
 
 
 async.series([
-    createGenreAuthors,
-    createBooks,
-    createBookInstances
+    createCategotyStudentTeacherWorker,
+    createTool,
+    createlend
 ],
 // Optional callback
 function(err, results) {
@@ -219,7 +233,7 @@ function(err, results) {
         console.log('FINAL ERR: '+err);
     }
     else {
-        console.log('BOOKInstances: '+bookinstances);
+        console.log('Todo a salido bien');
         
     }
     // All done, disconnect from database

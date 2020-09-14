@@ -83,5 +83,5 @@ function onError(error) {
 function onListening() {
 	var addr = server.address();
 	var bind = typeof addr === 'string' ? 'Pipe ' + addr : 'Port ' + addr.port;
-	debug('Escucando en ' + bind);
+	debug('Escuchando en ' + bind);
 }

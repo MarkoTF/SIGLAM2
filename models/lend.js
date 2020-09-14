@@ -7,7 +7,7 @@ var LendSchema = new Schema({
 	maestro: {type: Schema.Types.ObjectId, ref: 'Teacher', required: true},
 	trabajador: {type: Schema.Types.ObjectId, ref: 'Worker', required: false},
 	herramientas: [{type: Schema.Types.ObjectId, ref: 'Tool', required: true}],
-	fecha: {type: Date, required: true}
+	fecha: {type: String, required: true}
 });
 
 LendSchema

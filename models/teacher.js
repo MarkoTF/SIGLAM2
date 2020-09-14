@@ -7,7 +7,9 @@ var TeacherSchema = new Schema({
 	apellido: {type: String, required: true},
 	identificacion: {type: Number, required: true},
 	carrera: {type: String, required: true},
-	horario: {type: String, required: true}
+	horario: {type: String, required: true},
+	correo: {type: String, required: true},
+	contrasenia: {type: String, required: true}
 });
 
 TeacherSchema
